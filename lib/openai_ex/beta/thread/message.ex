@@ -23,10 +23,10 @@ defmodule OpenaiEx.Beta.Thread.Message do
     field(:assistant_id, :string)
     field(:run_id, :string)
 
-    field(:meta, :map, default: %{})
+    field(:metadata, :map, default: %{})
   end
 
-  @create_fields ~w(id object created_at thread_id role)a
+  @create_fields ~w(id object created_at thread_id role file_ids assistant_id run_id metadata)a
 
   def new(%{} = attrs \\ %{}) do
     %Message{}
@@ -54,13 +54,40 @@ defmodule OpenaiEx.Beta.Thread.Message do
     |> handle_response()
   end
 
-  defp handle_response(res, method \\ nil) do
+  def list(thread_id) do
+    url = "/threads/#{thread_id}/messages"
+
+    prepare(url)
+    |> put_header("OpenAI-Beta", "assistants=v1")
+    |> Req.get()
+    |> handle_response()
+  end
+
+  def retrieve(thread_id, message_id) do
+    url = "/threads/#{thread_id}/messages"
+
+    prepare(url <> "/#{message_id}")
+    |> put_header("OpenAI-Beta", "assistants=v1")
+    |> Req.get()
+    |> handle_response()
+  end
+
+  def modify(thread_id, message_id, metadata) do
+    url = "/threads/#{thread_id}/messages"
+
+    prepare(url <> "/#{message_id}")
+    |> put_header("OpenAI-Beta", "assistants=v1")
+    |> Req.post(body: Jason.encode!(%{metadata: metadata}))
+    |> handle_response()
+  end
+
+  defp handle_response(res) do
     res
     |> case do
-      {:ok, %Req.Response{body: data}} ->
-        case method do
-          :delete -> %{id: data["id"], object: data["object"], deleted: data["deleted"]}
-          _ -> Message.new!(data)
+      {:ok, %Req.Response{body: body}} ->
+        case body["object"] do
+          "list" -> body["data"] |> Enum.map(&Message.new!(&1))
+          _ -> Message.new!(body)
         end
 
       {:error, %Mint.TransportError{reason: :timeout}} ->
