@@ -15,10 +15,10 @@ defmodule OpenaiEx.Beta.Thread do
     field(:id, :string)
     field(:object, :string)
     field(:created_at, :integer)
-    field(:meta, :map, default: %{})
+    field(:metadata, :map, default: %{})
   end
 
-  @create_fields ~w(id object created_at meta)a
+  @create_fields ~w(id object created_at metadata)a
 
   def new(%{} = attrs \\ %{}) do
     %Thread{}
@@ -28,8 +28,8 @@ defmodule OpenaiEx.Beta.Thread do
 
   def new!(attrs \\ %{}) do
     case new(attrs) do
-      {:ok, message} ->
-        message
+      {:ok, thread} ->
+        thread
 
       {:error, changeset} ->
         raise Error, changeset

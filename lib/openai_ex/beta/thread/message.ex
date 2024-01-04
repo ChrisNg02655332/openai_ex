@@ -50,7 +50,7 @@ defmodule OpenaiEx.Beta.Thread.Message do
 
     prepare(url)
     |> put_header("OpenAI-Beta", "assistants=v1")
-    |> Req.post(body: Jason.encode!(chat_msg))
+    |> Req.post(body: Jason.encode!(Map.from_struct(chat_msg)))
     |> handle_response()
   end
 
@@ -84,10 +84,16 @@ defmodule OpenaiEx.Beta.Thread.Message do
   defp handle_response(res) do
     res
     |> case do
-      {:ok, %Req.Response{body: body}} ->
-        case body["object"] do
-          "list" -> body["data"] |> Enum.map(&Message.new!(&1))
-          _ -> Message.new!(body)
+      {:ok, %Req.Response{body: data}} ->
+        case data["error"] do
+          true ->
+            {:error, data["error"]["message"]}
+
+          _ ->
+            case data["object"] do
+              "list" -> data["data"] |> Enum.map(&Message.new!(&1))
+              _ -> Message.new!(data)
+            end
         end
 
       {:error, %Mint.TransportError{reason: :timeout}} ->

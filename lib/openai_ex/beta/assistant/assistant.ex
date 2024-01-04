@@ -3,6 +3,7 @@ defmodule OpenaiEx.Beta.Assistant do
   import Ecto.Changeset
 
   alias __MODULE__
+  alias OpenaiEx.Beta.Schema.Tool
   alias OpenaiEx.Error
   import OpenaiEx.Api
 
@@ -20,25 +21,26 @@ defmodule OpenaiEx.Beta.Assistant do
     field(:name, :string)
     field(:description, :string)
     field(:instructions, :string)
-    field(:tools, {:array, :map}, default: [%{type: "code_interpreter"}])
+    embeds_many(:tools, Tool)
     field(:file_ids, {:array, :string}, default: [])
-    field(:meta, :map, default: %{})
+    field(:metadata, :map, default: %{})
   end
 
-  @create_fields ~w(id model object created_at name description instructions tools file_ids meta)a
+  @create_fields ~w(id model object created_at name description instructions file_ids metadata)a
   @required_fields ~w(model name instructions)a
 
   def new(%{} = attrs \\ %{}) do
     %Assistant{}
     |> cast(attrs, @create_fields)
+    |> cast_embed(:tools)
     |> common_validation()
     |> apply_action(:insert)
   end
 
   def new!(attrs \\ %{}) do
     case new(attrs) do
-      {:ok, message} ->
-        message
+      {:ok, assistant} ->
+        assistant
 
       {:error, changeset} ->
         raise Error, changeset
@@ -54,6 +56,13 @@ defmodule OpenaiEx.Beta.Assistant do
     prepare(@url)
     |> put_header("OpenAI-Beta", "assistants=v1")
     |> Req.post(body: Jason.encode!(openai))
+    |> handle_response()
+  end
+
+  def modify(assist_id, data) do
+    prepare(@url <> "/#{assist_id}")
+    |> put_header("OpenAI-Beta", "assistants=v1")
+    |> Req.post(body: Jason.encode!(data))
     |> handle_response()
   end
 
