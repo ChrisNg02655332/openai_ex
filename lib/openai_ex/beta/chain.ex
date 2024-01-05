@@ -71,6 +71,7 @@ defmodule OpenaiEx.Beta.Chain do
 
   def add_message(%Chain{} = chain, %Message{} = message) do
     Thread.Message.create(chain.thread_id, message)
+    chain
   end
 
   def run(%Chain{} = chain) do
