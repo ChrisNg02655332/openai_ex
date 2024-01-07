@@ -84,7 +84,7 @@ defmodule OpenaiEx.Beta.Chain do
         }
       end)
 
-    Assistant.modify(chain.assistant_id, %{tools: tools}) |> dbg()
+    Assistant.modify(chain.assistant_id, %{tools: tools})
 
     run = Thread.Run.create(chain.assistant_id, chain.thread_id)
     excute_run_fn(chain._function_map, run.thread_id, run.id)
