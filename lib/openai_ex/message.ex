@@ -6,7 +6,6 @@ defmodule OpenaiEx.Message do
 
   alias OpenaiEx.Error
 
-  @status ~w(complete cancelled length)a
   @role ~w(system user assistant function)a
 
   @primary_key false
@@ -59,5 +58,21 @@ defmodule OpenaiEx.Message do
 
   def new_user!(content, metadata \\ %{}) do
     new!(%{role: :user, content: content, metadata: metadata})
+  end
+
+  def new_assistant(content, metadata \\ %{}) do
+    new(%{role: :assistant, content: content, metadata: metadata})
+  end
+
+  def new_assistant!(content, metadata \\ %{}) do
+    new!(%{role: :assistant, content: content, metadata: metadata})
+  end
+
+  def new_system(content, metadata \\ %{}) do
+    new(%{role: :system, content: content, metadata: metadata})
+  end
+
+  def new_system!(content, metadata \\ %{}) do
+    new!(%{role: :system, content: content, metadata: metadata})
   end
 end
