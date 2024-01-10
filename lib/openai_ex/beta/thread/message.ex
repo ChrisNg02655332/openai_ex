@@ -85,8 +85,6 @@ defmodule OpenaiEx.Beta.Thread.Message do
     res
     |> case do
       {:ok, %Req.Response{body: data}} ->
-        dbg(data)
-
         case data["error"] do
           true ->
             {:error, data["error"]["message"]}
