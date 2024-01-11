@@ -108,7 +108,16 @@ defmodule OpenaiEx.Beta.Chain do
         function =
           List.first(run.required_action.submit_tool_outputs["tool_calls"], %{})["function"]
 
-        args = Jason.decode!(function["arguments"])
+        args =
+          case Jason.decode(function["arguments"]) do
+            {:ok, args} ->
+              args
+
+            {:error, error} ->
+              dbg(error)
+              %{}
+          end
+
         func = function_map[function["name"]]
 
         result = if !is_nil(func), do: func.function.(args), else: ""
